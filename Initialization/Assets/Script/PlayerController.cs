@@ -18,7 +18,7 @@ public class PlayerController : MonoBehaviour
         float moveX = Input.GetAxis("Horizontal");
 
         // Move o jogador na horizontal, mantendo a velocidade vertical
-        rb.velocity = new Vector2(moveX * moveSpeed, rb.velocity.y);
+        rb.linearVelocity = new Vector2(moveX * moveSpeed, rb.linearVelocity.y);
 
     }
 }
