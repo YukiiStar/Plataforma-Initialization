@@ -7,7 +7,7 @@ public class SimplePlayer : MonoBehaviour
     
     public CommandManager MyCommandManager;
     // Start is called once before the first execution of Update after the MonoBehaviour is created
-    void Start()
+    private void Start()
     {
         MyCommandManager = new CommandManager();
     }
@@ -28,14 +28,26 @@ public class SimplePlayer : MonoBehaviour
             MyCommandManager.DoCommand();
             //transform.position += Vector3.right;
         }
+
+        if (Keyboard.current.uKey.wasPressedThisFrame)
+        {
+            UndoLastCommand();
+        }
     }
 
     private void OnTriggerEnter2D(Collider2D other)
     {
         if (other.CompareTag("Coin"))
         {
-            moedas++;
-            Destroy(other.gameObject);
+            MyCommandManager.AddCommand(new GetCoin(other.gameObject, this));
+            MyCommandManager.DoCommand();
+            //moedas++;
+            //(other.gameObject);
         }
+    }
+
+    public void UndoLastCommand()
+    {
+        MyCommandManager.UndoCommand();
     }
 }

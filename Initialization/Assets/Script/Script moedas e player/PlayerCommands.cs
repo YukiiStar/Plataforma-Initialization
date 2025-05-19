@@ -8,28 +8,57 @@ public class MoveUp : ICommand
     {
         myPlayerTransform = playerTransform;
     }
+
     public void Do()
     {
         myPlayerTransform.position += Vector3.up;
+    }
+    public void Undo()
+    {
+        myPlayerTransform.position -= Vector3.up;
+    }
+}
+
+public class MoveRight : ICommand
+
+{
+    private Transform myPlayerTransform;
+
+    public MoveRight(Transform playerTransform)
+    {
+        myPlayerTransform = playerTransform;
+    }
+    public void Do()
+    {
+        myPlayerTransform.position += Vector3.right;
     } 
     
-    public class MoveRight : ICommand
+    public void Undo()
     {
-        private Transform myPlayerTransform;
+        myPlayerTransform.position -= Vector3.right;
+    } 
+}
 
-        public MoveRight(Transform playerTransform)
-        {
-            myPlayerTransform = playerTransform;
-        }
-        public void Do()
-        {
-            myPlayerTransform.position += Vector3.up;
-        } 
+public class GetCoin : ICommand
+{
+    private GameObject coinObject;
+    private SimplePlayer player;
+
+    public GetCoin(GameObject coin, SimplePlayer player)
+    {
+        coinObject = coin;
+        this.player = player;
+    }
+    public void Do()
+    {
+        player.moedas++;
+        coinObject.SetActive(false);
     }
 
-    public class GetCoin : ICommand
+    public void Undo()
     {
-        private GameObject coinObject;
-        private SimplePlayer player;
+        player.moedas--;
+        coinObject.SetActive(true);
+        player.UndoLastCommand();
     }
 }
