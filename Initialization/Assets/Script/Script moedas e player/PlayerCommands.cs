@@ -21,6 +21,7 @@ public class MoveUp : ICommand
 
 public class MoveRight : ICommand
 
+
 {
     private Transform myPlayerTransform;
 
