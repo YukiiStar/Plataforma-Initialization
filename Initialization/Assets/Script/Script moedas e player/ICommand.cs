@@ -1,7 +1,6 @@
-
-
 public interface ICommand
-{ 
-    void Undo();
+{
     void Execute();
+    void Undo();
+    void Do();
 }

@@ -3,7 +3,8 @@ using UnityEngine;
 public class InputManager : MonoBehaviour
 {
     private PuzzlePiece selectedPiece;
-    public CommandInvoker invoker;
+    public CommandInvokerr invoker;
+    public static object Instance { get; set; }
 
     public void OnPieceClicked(PuzzlePiece piece)
     {
@@ -16,6 +17,8 @@ public class InputManager : MonoBehaviour
             ICommand move = new MoveCommandQuebra(selectedPiece, piece);
             invoker.ExecuteCommand(move);
             selectedPiece = null;
+
+            // Verifica vitória aqui
         }
     }
 }

@@ -3,6 +3,7 @@ using UnityEngine;
 public class MoveUp : ICommand
 {
     private Transform myPlayerTransform;
+    private ICommand _commandImplementation;
 
     public MoveUp(Transform playerTransform)
     {
@@ -16,6 +17,11 @@ public class MoveUp : ICommand
     public void Undo()
     {
         myPlayerTransform.position -= Vector3.up;
+    }
+
+    public void Execute()
+    {
+        throw new System.NotImplementedException();
     }
 }
 
@@ -37,7 +43,12 @@ public class MoveRight : ICommand
     public void Undo()
     {
         myPlayerTransform.position -= Vector3.right;
-    } 
+    }
+
+    public void Execute()
+    {
+        throw new System.NotImplementedException();
+    }
 }
 
 public class GetCoin : ICommand
@@ -61,5 +72,10 @@ public class GetCoin : ICommand
         player.moedas--;
         coinObject.SetActive(true);
         player.UndoLastCommand();
+    }
+
+    public void Execute()
+    {
+        throw new System.NotImplementedException();
     }
 }

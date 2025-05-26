@@ -2,7 +2,7 @@ using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 
-public class CommandInvoker
+public class CommandInvokerr
 {
     private Stack<ICommand> history = new Stack<ICommand>();
     private List<ICommand> replayList = new List<ICommand>();
@@ -44,5 +44,23 @@ public class CommandInvoker
     {
         history.Clear();
         replayList.Clear();
+    }
+
+    public class Instance
+    {
+        public static void Replay(float f)
+        {
+            throw new System.NotImplementedException();
+        }
+
+        public static void Undo()
+        {
+            throw new System.NotImplementedException();
+        }
+
+        public static void SkipReplay()
+        {
+            throw new System.NotImplementedException();
+        }
     }
 }
