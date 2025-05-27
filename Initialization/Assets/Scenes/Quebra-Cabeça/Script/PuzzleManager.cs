@@ -102,23 +102,15 @@ public class PuzzleManager : MonoBehaviour
            // Cria o comando e executa
            SwapCommand cmd = new SwapCommand(a, b, indexA, indexB);
            cmd.Execute();
-
-
-           // Guarda no histórico e pilha de undo
+           
            commandHistory.Add(cmd);
            undoStack.Push(cmd);
 
-
-           // Limpa seleção
            firstSelected = null;
-
-
-           // Verifica se o jogo foi resolvido
            CheckWin();
        }
    }
-
-
+   
    // Verifica se todas as peças estão no lugar correto
    void CheckWin()
    {
