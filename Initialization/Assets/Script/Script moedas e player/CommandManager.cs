@@ -14,12 +14,6 @@ public class CommandManager
     {
         commands.Add(command);
     }
-
-    public void DoCommand()
-    {
-        commands[^1].Do(); 
-    }
-
     public void UndoCommand() // ela desfaz outro comando e remove da lista
     {
         ICommand command = commands[^1];
