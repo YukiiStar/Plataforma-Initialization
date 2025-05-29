@@ -202,5 +202,16 @@ public class PuzzleManager : MonoBehaviour
        skipButton.gameObject.SetActive(false);
        Debug.Log("⏩ Replay pulado!");
    }
+   
+   public void Undo()
+   {
+       // Impede desfazer se estiver em replay ou se houver uma peça selecionada
+       if (isReplaying || undoStack.Count == 0 || firstSelected != null)
+           return;
+
+       ICommand2 cmd = undoStack.Pop();
+       cmd.Undo();
+   }
+
 }     
   
