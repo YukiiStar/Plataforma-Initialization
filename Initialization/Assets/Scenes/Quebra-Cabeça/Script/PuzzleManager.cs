@@ -10,20 +10,26 @@ public class PuzzleManager : MonoBehaviour
     public Button replayButton;       // Botão de assistir replay
     public Button skipButton;         // Botão de pular o replay
     public GameObject Vitoria;        // Painel de vitória (onde está também o botão de jogar novamente)
+    public Button restartButton;
+
     public Button playAgainButton;
-    
+
     private List<ICommand2> commandHistory = new List<ICommand2>(); // Histórico de comandos
     private Stack<ICommand2> undoStack = new Stack<ICommand2>();    // Pilha de desfazer
+    
     private List<Piece> pieces = new List<Piece>();                 // Lista de peças
     private Piece firstSelected = null;                             // Primeira peça clicada
+    
     private bool isReplaying = false;                               // Flag para saber se está em replay
+
+    private List<Transform> initialPieceOrder = new List<Transform>(); // Ordem inicial salv
 
     void Start()
     {
         replayButton.gameObject.SetActive(false);
         skipButton.gameObject.SetActive(false);
-        playAgainButton.gameObject.SetActive(false);
         Vitoria.SetActive(false);
+        restartButton.gameObject.SetActive(false);
 
         SetupPieces();
         ShufflePieces();
@@ -41,7 +47,13 @@ public class PuzzleManager : MonoBehaviour
             pieces.Add(p);
         }
     }
-
+    void RestoreInitialOrder()
+    {
+        for (int i = 0; i < initialPieceOrder.Count; i++)
+        {
+            initialPieceOrder[i].SetSiblingIndex(i);
+        }
+    }
     void ShufflePieces()
     {
         for (int i = 0; i < pieces.Count; i++)
@@ -60,7 +72,11 @@ public class PuzzleManager : MonoBehaviour
     public void OnPieceClicked(Piece clicked)
     {
         if (isReplaying) return;
-
+        
+        if (commandHistory.Count == 0)
+        {
+            SaveInitialSiblingOrder();
+        }
         if (firstSelected == null)
         {
             firstSelected = clicked;
@@ -83,6 +99,23 @@ public class PuzzleManager : MonoBehaviour
             CheckWin();
         }
     }
+    void SaveInitialSiblingOrder()
+    {
+        initialPieceOrder.Clear();
+        for (int i = 0; i < puzzleGrid.childCount; i++)
+        {
+            initialPieceOrder.Add(puzzleGrid.GetChild(i));
+        }
+    }
+    
+    void RestoreInitialSiblingOrder()
+    {
+        for (int i = 0; i < initialPieceOrder.Count; i++)
+        {
+            initialPieceOrder[i].SetSiblingIndex(i);
+        }
+        LayoutRebuilder.ForceRebuildLayoutImmediate(puzzleGrid.GetComponent<RectTransform>());
+    }
 
     void CheckWin()
     {
@@ -93,85 +126,122 @@ public class PuzzleManager : MonoBehaviour
                 return;
         }
 
-        Debug.Log("🎉 Quebra-cabeça completo!");
+        Debug.Log(" Quebra-cabeça completo!");
+        ShowVictoryScreen();
+    }
+    void ShowVictoryScreen() // Exibe painel de vitória
+    {
         Vitoria.SetActive(true);
+        restartButton.gameObject.SetActive(true);
         replayButton.gameObject.SetActive(true);
         skipButton.gameObject.SetActive(true);
-        playAgainButton.gameObject.SetActive(true);
+        undoButton.gameObject.SetActive(true);
+        BringButtonsToFront();
     }
-
     public void Undo()
     {
         if (isReplaying || undoStack.Count == 0 || firstSelected != null) return;
         ICommand2 lastCommand = undoStack.Pop();
         lastCommand.Undo();
-    }
+        
+        if (commandHistory.Count > 0)
+        {
+            commandHistory.RemoveAt(commandHistory.Count - 1);
+        }
 
+        if (!IsPuzzleComplete())
+        {
+            Vitoria.SetActive(false);
+        }
+    }
+    
+    bool IsPuzzleComplete()
+    {
+        Piece[] currentPieces = puzzleGrid.GetComponentsInChildren<Piece>();
+        for (int i = 0; i < currentPieces.Length; i++)
+        {
+            if (currentPieces[i].correctIndex != i)
+                return false;
+        }
+        return true;
+    }
     public void StartReplay()
     {
         if (isReplaying) return;
-        Vitoria.SetActive(false);
-        skipButton.gameObject.SetActive(true);
-        playAgainButton.gameObject.SetActive(false);
         StartCoroutine(ReplaySequence());
+        Vitoria.SetActive(false);
     }
 
     IEnumerator ReplaySequence()
     {
         isReplaying = true;
+        
+        Vitoria.SetActive(false);
+        replayButton.gameObject.SetActive(false);
         skipButton.gameObject.SetActive(true);
 
-        ShufflePieces();
+        RestoreInitialOrder();
         yield return new WaitForSeconds(1f);
 
         foreach (ICommand2 cmd in commandHistory)
         {
+            if (!isReplaying) yield break;
+            
             cmd.Execute();
             yield return new WaitForSeconds(1f);
         }
 
         isReplaying = false;
+        ShowVictoryScreen();
         Debug.Log("✅ Replay finalizado!");
-        // Chama CheckWin para manter o estado correto
-        CheckWin();
     }
 
     public void SkipReplay()
     {
-        if (!isReplaying) return;
-
         StopAllCoroutines();
-        isReplaying = false;
+        isReplaying = true;
 
-        // Executa todas as jogadas imediatamente
-        foreach (ICommand2 cmd in commandHistory)
+        for (int i = 0; i < puzzleGrid.childCount; i++)
         {
-            cmd.Execute();
+            for (int j = 0; j < puzzleGrid.childCount; j++)
+            {
+                Piece piece = puzzleGrid.GetChild(j).GetComponent<Piece>();
+                if (piece.correctIndex == i)
+                {
+                    piece.transform.SetSiblingIndex(i);
+                    break;
+                }
+            }
         }
-
-        Debug.Log("⏩ Replay pulado!");
-
-        // NÃO reativa a tela de vitória
-        Vitoria.SetActive(false); // Oculta se estivesse ativa
-        skipButton.gameObject.SetActive(false);
-        playAgainButton.gameObject.SetActive(true); // Agora o puzzle está montado e visível ao jogador, sem a tela de vitória em cima
+        
+        LayoutRebuilder.ForceRebuildLayoutImmediate(puzzleGrid.GetComponent<RectTransform>());
+        isReplaying = false;
+        
+        ShowVictoryScreen();
+        Debug.Log(" Replay pulado: peças montadas corretamente.");
     }
-
-
-    public void PlayAgain()
+    
+    public void RestartGame()
     {
-        Vitoria.SetActive(false);
-        replayButton.gameObject.SetActive(false);
-        skipButton.gameObject.SetActive(false);
-        playAgainButton.gameObject.SetActive(false);
-
         ShufflePieces();
         commandHistory.Clear();
         undoStack.Clear();
-        firstSelected = null;
+        initialPieceOrder.Clear();
+        
+        Vitoria.SetActive(false);
+        restartButton.gameObject.SetActive(false);
+        replayButton.gameObject.SetActive(false);
+        skipButton.gameObject.SetActive(false);
+        undoButton.gameObject.SetActive(true);
+        
+        Debug.Log("🔁 Jogo reiniciado.");
     }
-}
-
-
-
+    void BringButtonsToFront()
+    {
+        restartButton.transform.SetAsLastSibling();
+        replayButton.transform.SetAsLastSibling();
+        skipButton.transform.SetAsLastSibling();
+        undoButton.transform.SetAsLastSibling();
+    }
   
+}
